@@ -24,7 +24,7 @@ Examples available at [www.stathat.com/src/splint](http://www.stathat.com/src/sp
 Contact us
 ----------
 
-We'd love to hear from you if you are using splint!  We're on twitter: [@stat_hat](http://twitter.com/stat_hat) or [contact us here](http://www.stathat.com/docs/contact).
+We'd love to hear from you if you are using `splint`!  We're on twitter: [@stat_hat](http://twitter.com/stat_hat) or [contact us here](http://www.stathat.com/docs/contact).
 
 About
 -----
