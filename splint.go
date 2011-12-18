@@ -1,3 +1,12 @@
+// Copyright 2011 Numrotron Inc.
+// Use of this source code is governed by an MIT-style license
+// that can be found in the LICENSE file.
+//
+// Developed at www.stathat.com by Patrick Crosby
+// Contact us on twitter with any questions:  twitter.com/stat_hat
+
+// splint is a little Go application to analyze Go source files.  It finds any functions that are
+// too long or have too many parameters or results.
 package main
 
 import (
@@ -8,6 +17,10 @@ import (
         "go/token"
         "os"
 )
+
+var statementThreshold = flag.Int("s", 30, "function statement count threshold")
+var paramThreshold = flag.Int("p", 5, "parameter list length threshold")
+var resultThreshold = flag.Int("r", 5, "result list length threshold")
 
 type Parser struct {
         filename string
@@ -40,7 +53,7 @@ func (p *Parser) outputFilename() {
 
 func (p *Parser) checkFuncLength(x *ast.FuncDecl) {
         numStatements := statementCount(x)
-        if numStatements > 40 {
+        if numStatements > *statementThreshold {
                 p.outputFilename()
                 fmt.Printf("function %s too long: %d\n", x.Name, numStatements)
         }
@@ -48,7 +61,7 @@ func (p *Parser) checkFuncLength(x *ast.FuncDecl) {
 
 func (p *Parser) checkParamCount(x *ast.FuncDecl) {
         numFields := x.Type.Params.NumFields()
-        if numFields > 5 {
+        if numFields > *paramThreshold {
                 p.outputFilename()
                 fmt.Printf("function %s has too many params: %d\n", x.Name, numFields)
         }
@@ -56,7 +69,7 @@ func (p *Parser) checkParamCount(x *ast.FuncDecl) {
 
 func (p *Parser) checkResultCount(x *ast.FuncDecl) {
         numResults := x.Type.Results.NumFields()
-        if numResults > 5 {
+        if numResults > *resultThreshold {
                 p.outputFilename()
                 fmt.Printf("function %s has too many params: %d\n", x.Name, numResults)
         }
@@ -96,8 +109,9 @@ func main() {
         flag.Parse()
         args := flag.Args()
         if len(args) == 0 {
-                fmt.Printf("no files specified\n")
-                os.Exit(0)
+                fmt.Println("Usage: splint [options] <go file>...")
+                flag.PrintDefaults()
+                os.Exit(1)
         }
 
         for _, v := range args {
