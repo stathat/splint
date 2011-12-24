@@ -71,13 +71,14 @@ func (p *Parser) checkResultCount(x *ast.FuncDecl) {
 	numResults := x.Type.Results.NumFields()
 	if numResults > *resultThreshold {
 		p.outputFilename()
-		fmt.Printf("function %s has too many params: %d\n", x.Name, numResults)
+		fmt.Printf("function %s has too many results: %d\n", x.Name, numResults)
 	}
 }
 
 func (p *Parser) examineFunc(x *ast.FuncDecl) {
 	p.checkFuncLength(x)
 	p.checkParamCount(x)
+	p.checkResultCount(x)
 }
 
 func (p *Parser) examineDecls(tree *ast.File) {
