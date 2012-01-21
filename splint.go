@@ -17,12 +17,14 @@ import (
 	"go/parser"
 	"go/token"
 	"os"
+	"path"
 )
 
 var statementThreshold = flag.Int("s", 30, "function statement count threshold")
 var paramThreshold = flag.Int("p", 5, "parameter list length threshold")
 var resultThreshold = flag.Int("r", 5, "result list length threshold")
 var outputJSON = flag.Bool("j", false, "output results as json")
+var ignoreTestFiles = flag.Bool("i", true, "ignore test files")
 
 type Parser struct {
 	filename string
@@ -155,7 +157,20 @@ func (p *Parser) Parse() {
 	p.examineDecls(tree)
 }
 
+func isTestFile(filename string) bool {
+        base := path.Base(filename)
+        match, err := path.Match("*_test.go", base)
+        if err != nil {
+                fmt.Println("match error:", err)
+                return false
+        }
+        return match
+}
+
 func parseFile(filename string, summary *Summary) {
+        if *ignoreTestFiles && isTestFile(filename) {
+                return
+        }
 	parser := NewParser(filename, summary)
 	parser.Parse()
 }
