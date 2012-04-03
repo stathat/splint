@@ -12,9 +12,9 @@ keep them short.
 Installation
 ------------
 
-Use `goinstall`:
+Use `go install`:
 
-    goinstall github.com/stathat/splint
+    go install github.com/stathat/splint
 
 Usage
 -----
