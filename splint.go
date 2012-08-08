@@ -11,6 +11,7 @@ package main
 
 import (
 	"encoding/json"
+	"encoding/xml"
 	"flag"
 	"fmt"
 	"go/ast"
@@ -24,7 +25,7 @@ var (
 	statementThreshold = flag.Int("s", 30, "function statement count threshold")
 	paramThreshold     = flag.Int("p", 5, "parameter list length threshold")
 	resultThreshold    = flag.Int("r", 5, "result list length threshold")
-	outputJSON         = flag.Bool("j", false, "output results as json")
+	outputType         = flag.String("o", "text", "output results as text, json or xml")
 	ignoreTestFiles    = flag.Bool("i", true, "ignore test files")
 )
 
@@ -84,7 +85,7 @@ func statementCount(n ast.Node) int {
 }
 
 func (p *Parser) outputFilename() {
-	if *outputJSON {
+	if *outputType != "text" {
 		return
 	}
 	if p.first {
@@ -101,7 +102,7 @@ func (p *Parser) checkFuncLength(x *ast.FuncDecl) {
 
 	p.summary.addStatement(p.filename, x.Name.String(), numStatements)
 
-	if *outputJSON == false {
+	if *outputType == "text" {
 		p.outputFilename()
 		fmt.Printf("function %s too long: %d\n", x.Name, numStatements)
 	}
@@ -114,7 +115,7 @@ func (p *Parser) checkParamCount(x *ast.FuncDecl) {
 	}
 
 	p.summary.addParam(p.filename, x.Name.String(), numFields)
-	if *outputJSON == false {
+	if *outputType == "text" {
 		p.outputFilename()
 		fmt.Printf("function %s has too many params: %d\n", x.Name, numFields)
 	}
@@ -127,7 +128,7 @@ func (p *Parser) checkResultCount(x *ast.FuncDecl) {
 	}
 
 	p.summary.addResult(p.filename, x.Name.String(), numResults)
-	if *outputJSON == false {
+	if *outputType == "text" {
 		p.outputFilename()
 		fmt.Printf("function %s has too many results: %d\n", x.Name, numResults)
 	}
@@ -192,7 +193,7 @@ func main() {
 		parseFile(v, summary)
 	}
 
-	if *outputJSON {
+	if *outputType == "json" {
 		/*
 		   buf := new(bytes.Buffer)
 		   encoder := json.NewEncoder(buf)
@@ -207,7 +208,12 @@ func main() {
 			fmt.Println("json encode error:", err)
 		}
 		fmt.Println(string(data))
-
+	} else if *outputType == "xml" {
+		data, err := xml.MarshalIndent(summary, "", "\t")
+		if err != nil {
+			fmt.Println("xml encode error:", err)
+		}
+		fmt.Println(string(data))
 	} else {
 		fmt.Println()
 		fmt.Println("Number of functions above statement threshold:", summary.NumAboveStatementThreshold)
