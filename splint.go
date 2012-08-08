@@ -1,16 +1,17 @@
 // Copyright 2011 Numrotron Inc.
-// Use of this source code is governed by an MIT-style license
-// that can be found in the LICENSE file.
+// Use of this source code is governed by an MIT-style license that can be
+// found in the LICENSE file.
 //
 // Developed at www.stathat.com by Patrick Crosby
 // Contact us on twitter with any questions:  twitter.com/stat_hat
 
-// splint is a little Go application to analyze Go source files.  It finds any functions that are
-// too long or have too many parameters or results.
+// splint is a little Go application to analyze Go source files.  It finds any
+// functions that are too long or have too many parameters or results.
 package main
 
 import (
 	"encoding/json"
+	"encoding/xml"
 	"flag"
 	"fmt"
 	"go/ast"
@@ -20,11 +21,13 @@ import (
 	"path"
 )
 
-var statementThreshold = flag.Int("s", 30, "function statement count threshold")
-var paramThreshold = flag.Int("p", 5, "parameter list length threshold")
-var resultThreshold = flag.Int("r", 5, "result list length threshold")
-var outputJSON = flag.Bool("j", false, "output results as json")
-var ignoreTestFiles = flag.Bool("i", true, "ignore test files")
+var (
+	statementThreshold = flag.Int("s", 30, "function statement count threshold")
+	paramThreshold     = flag.Int("p", 5, "parameter list length threshold")
+	resultThreshold    = flag.Int("r", 5, "result list length threshold")
+	outputType         = flag.String("o", "text", "output results as text, json or xml")
+	ignoreTestFiles    = flag.Bool("i", true, "ignore test files")
+)
 
 type Parser struct {
 	filename string
@@ -82,7 +85,7 @@ func statementCount(n ast.Node) int {
 }
 
 func (p *Parser) outputFilename() {
-	if *outputJSON {
+	if *outputType != "text" {
 		return
 	}
 	if p.first {
@@ -99,7 +102,7 @@ func (p *Parser) checkFuncLength(x *ast.FuncDecl) {
 
 	p.summary.addStatement(p.filename, x.Name.String(), numStatements)
 
-	if *outputJSON == false {
+	if *outputType == "text" {
 		p.outputFilename()
 		fmt.Printf("function %s too long: %d\n", x.Name, numStatements)
 	}
@@ -112,7 +115,7 @@ func (p *Parser) checkParamCount(x *ast.FuncDecl) {
 	}
 
 	p.summary.addParam(p.filename, x.Name.String(), numFields)
-	if *outputJSON == false {
+	if *outputType == "text" {
 		p.outputFilename()
 		fmt.Printf("function %s has too many params: %d\n", x.Name, numFields)
 	}
@@ -125,7 +128,7 @@ func (p *Parser) checkResultCount(x *ast.FuncDecl) {
 	}
 
 	p.summary.addResult(p.filename, x.Name.String(), numResults)
-	if *outputJSON == false {
+	if *outputType == "text" {
 		p.outputFilename()
 		fmt.Printf("function %s has too many results: %d\n", x.Name, numResults)
 	}
@@ -158,19 +161,19 @@ func (p *Parser) Parse() {
 }
 
 func isTestFile(filename string) bool {
-        base := path.Base(filename)
-        match, err := path.Match("*_test.go", base)
-        if err != nil {
-                fmt.Println("match error:", err)
-                return false
-        }
-        return match
+	base := path.Base(filename)
+	match, err := path.Match("*_test.go", base)
+	if err != nil {
+		fmt.Println("match error:", err)
+		return false
+	}
+	return match
 }
 
 func parseFile(filename string, summary *Summary) {
-        if *ignoreTestFiles && isTestFile(filename) {
-                return
-        }
+	if *ignoreTestFiles && isTestFile(filename) {
+		return
+	}
 	parser := NewParser(filename, summary)
 	parser.Parse()
 }
@@ -190,7 +193,7 @@ func main() {
 		parseFile(v, summary)
 	}
 
-	if *outputJSON {
+	if *outputType == "json" {
 		/*
 		   buf := new(bytes.Buffer)
 		   encoder := json.NewEncoder(buf)
@@ -205,7 +208,12 @@ func main() {
 			fmt.Println("json encode error:", err)
 		}
 		fmt.Println(string(data))
-
+	} else if *outputType == "xml" {
+		data, err := xml.MarshalIndent(summary, "", "\t")
+		if err != nil {
+			fmt.Println("xml encode error:", err)
+		}
+		fmt.Println(string(data))
 	} else {
 		fmt.Println()
 		fmt.Println("Number of functions above statement threshold:", summary.NumAboveStatementThreshold)
