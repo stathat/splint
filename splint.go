@@ -1,12 +1,12 @@
 // Copyright 2011 Numrotron Inc.
-// Use of this source code is governed by an MIT-style license
-// that can be found in the LICENSE file.
+// Use of this source code is governed by an MIT-style license that can be
+// found in the LICENSE file.
 //
 // Developed at www.stathat.com by Patrick Crosby
 // Contact us on twitter with any questions:  twitter.com/stat_hat
 
-// splint is a little Go application to analyze Go source files.  It finds any functions that are
-// too long or have too many parameters or results.
+// splint is a little Go application to analyze Go source files.  It finds any
+// functions that are too long or have too many parameters or results.
 package main
 
 import (
@@ -20,11 +20,13 @@ import (
 	"path"
 )
 
-var statementThreshold = flag.Int("s", 30, "function statement count threshold")
-var paramThreshold = flag.Int("p", 5, "parameter list length threshold")
-var resultThreshold = flag.Int("r", 5, "result list length threshold")
-var outputJSON = flag.Bool("j", false, "output results as json")
-var ignoreTestFiles = flag.Bool("i", true, "ignore test files")
+var (
+	statementThreshold = flag.Int("s", 30, "function statement count threshold")
+	paramThreshold     = flag.Int("p", 5, "parameter list length threshold")
+	resultThreshold    = flag.Int("r", 5, "result list length threshold")
+	outputJSON         = flag.Bool("j", false, "output results as json")
+	ignoreTestFiles    = flag.Bool("i", true, "ignore test files")
+)
 
 type Parser struct {
 	filename string
@@ -158,19 +160,19 @@ func (p *Parser) Parse() {
 }
 
 func isTestFile(filename string) bool {
-        base := path.Base(filename)
-        match, err := path.Match("*_test.go", base)
-        if err != nil {
-                fmt.Println("match error:", err)
-                return false
-        }
-        return match
+	base := path.Base(filename)
+	match, err := path.Match("*_test.go", base)
+	if err != nil {
+		fmt.Println("match error:", err)
+		return false
+	}
+	return match
 }
 
 func parseFile(filename string, summary *Summary) {
-        if *ignoreTestFiles && isTestFile(filename) {
-                return
-        }
+	if *ignoreTestFiles && isTestFile(filename) {
+		return
+	}
 	parser := NewParser(filename, summary)
 	parser.Parse()
 }
