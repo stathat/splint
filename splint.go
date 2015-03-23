@@ -7,7 +7,7 @@
 
 // splint is a little Go application to analyze Go source files.  It finds any functions that are
 // too long or have too many parameters or results.
-package main
+package main // import "stathat.com/c/splint"
 
 import (
 	"encoding/json"
@@ -158,19 +158,19 @@ func (p *Parser) Parse() {
 }
 
 func isTestFile(filename string) bool {
-        base := path.Base(filename)
-        match, err := path.Match("*_test.go", base)
-        if err != nil {
-                fmt.Println("match error:", err)
-                return false
-        }
-        return match
+	base := path.Base(filename)
+	match, err := path.Match("*_test.go", base)
+	if err != nil {
+		fmt.Println("match error:", err)
+		return false
+	}
+	return match
 }
 
 func parseFile(filename string, summary *Summary) {
-        if *ignoreTestFiles && isTestFile(filename) {
-                return
-        }
+	if *ignoreTestFiles && isTestFile(filename) {
+		return
+	}
 	parser := NewParser(filename, summary)
 	parser.Parse()
 }
