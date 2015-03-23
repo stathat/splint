@@ -14,12 +14,12 @@ Installation
 
 Use `go install`:
 
-    go install github.com/stathat/splint
+    go install stathat.com/c/splint
 
 Usage
 -----
 
-Examples available at [www.stathat.com/src/splint](http://www.stathat.com/src/splint).
+Examples available at [www.stathat.com/c/splint](http://www.stathat.com/c/splint).
 
 Contact us
 ----------
@@ -29,4 +29,4 @@ We'd love to hear from you if you are using `splint`!  We're on twitter: [@stat_
 About
 -----
 
-Written by Patrick Crosby at [StatHat](http://www.stathat.com).  Twitter:  [@stat_hat](http://twitter.com/stat_hat)
+Written by Patrick Crosby at [StatHat](http://www.stathat.com).  Twitter:  [@stathat](http://twitter.com/stathat)
