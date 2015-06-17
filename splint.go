@@ -76,6 +76,10 @@ type Summary struct {
 	NumEmptyIfs                int
 }
 
+func (s *Summary) IsClean() bool {
+	return len(s.Statement) == 0 && len(s.Param) == 0 && len(s.Result) == 0 && len(s.EmptyIfs) == 0 && len(s.IfChains) == 0
+}
+
 func (s *Summary) addStatement(o *Offender) {
 	s.Statement = append(s.Statement, o)
 	s.NumAboveStatementThreshold++
@@ -274,5 +278,8 @@ func main() {
 		fmt.Println("Number of functions above result threshold:", summary.NumAboveResultThreshold)
 		fmt.Println("Number of long if/else chains:", summary.NumIfChains)
 		fmt.Println("Number of empty if bodies:", summary.NumEmptyIfs)
+		if !summary.IsClean() {
+			os.Exit(1)
+		}
 	}
 }
