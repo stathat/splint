@@ -25,6 +25,7 @@ var paramThreshold = flag.Int("p", 5, "parameter list length threshold")
 var resultThreshold = flag.Int("r", 5, "result list length threshold")
 var outputJSON = flag.Bool("j", false, "output results as json")
 var ignoreTestFiles = flag.Bool("i", true, "ignore test files")
+var outputSummary = flag.Bool("sum", false, "output summary")
 
 type Parser struct {
 	filename string
@@ -81,16 +82,6 @@ func statementCount(n ast.Node) int {
 	return total
 }
 
-func (p *Parser) outputFilename() {
-	if *outputJSON {
-		return
-	}
-	if p.first {
-		fmt.Printf("\n%s\n", p.filename)
-		p.first = false
-	}
-}
-
 func (p *Parser) checkFuncLength(x *ast.FuncDecl) {
 	numStatements := statementCount(x)
 	if numStatements <= *statementThreshold {
@@ -100,8 +91,7 @@ func (p *Parser) checkFuncLength(x *ast.FuncDecl) {
 	p.summary.addStatement(p.filename, x.Name.String(), numStatements)
 
 	if *outputJSON == false {
-		p.outputFilename()
-		fmt.Printf("function %s too long: %d\n", x.Name, numStatements)
+		fmt.Printf("%s: function %s too long: %d\n", p.filename, x.Name, numStatements)
 	}
 }
 
@@ -113,8 +103,7 @@ func (p *Parser) checkParamCount(x *ast.FuncDecl) {
 
 	p.summary.addParam(p.filename, x.Name.String(), numFields)
 	if *outputJSON == false {
-		p.outputFilename()
-		fmt.Printf("function %s has too many params: %d\n", x.Name, numFields)
+		fmt.Printf("%s: function %s has too many params: %d\n", p.filename, x.Name, numFields)
 	}
 }
 
@@ -126,8 +115,7 @@ func (p *Parser) checkResultCount(x *ast.FuncDecl) {
 
 	p.summary.addResult(p.filename, x.Name.String(), numResults)
 	if *outputJSON == false {
-		p.outputFilename()
-		fmt.Printf("function %s has too many results: %d\n", x.Name, numResults)
+		fmt.Printf("%s: function %s has too many results: %d\n", p.filename, x.Name, numResults)
 	}
 }
 
@@ -206,7 +194,7 @@ func main() {
 		}
 		fmt.Println(string(data))
 
-	} else {
+	} else if *outputSummary {
 		fmt.Println()
 		fmt.Println("Number of functions above statement threshold:", summary.NumAboveStatementThreshold)
 		fmt.Println("Number of functions above param threshold:", summary.NumAboveParamThreshold)
