@@ -24,6 +24,7 @@ var statementThreshold = flag.Int("s", 30, "function statement count threshold")
 var paramThreshold = flag.Int("p", 5, "parameter list length threshold")
 var resultThreshold = flag.Int("r", 5, "result list length threshold")
 var ifChainThreshold = flag.Int("c", 2, "if/else chain length threshold")
+var skipBoolParamCheck = flag.Bool("b", false, "don't warn on bool function params")
 var outputJSON = flag.Bool("j", false, "output results as json")
 var ignoreTestFiles = flag.Bool("i", true, "ignore test files")
 var outputSummary = flag.Bool("sum", false, "output summary")
@@ -163,6 +164,9 @@ func (p *Parser) checkParamCount(x *ast.FuncDecl) {
 }
 
 func (p *Parser) checkBoolParams(x *ast.FuncDecl) {
+	if *skipBoolParamCheck {
+		return
+	}
 	for _, f := range x.Type.Params.List {
 		// this is ugly, but:
 		if fmt.Sprintf("%s", f.Type) != "bool" {
