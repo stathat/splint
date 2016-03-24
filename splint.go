@@ -63,11 +63,12 @@ func (o *Offender) warnNoCount(msg string) {
 // Summary is a collection of Offenders for all the different
 // checks that splint performs.
 type Summary struct {
-	Statement []*Offender
-	Param     []*Offender
-	Result    []*Offender
-	EmptyIfs  []*Offender
-	IfChains  []*Offender
+	Statement  []*Offender
+	Param      []*Offender
+	Result     []*Offender
+	EmptyIfs   []*Offender
+	IfChains   []*Offender
+	BoolParams []*Offender
 
 	// redundant, but using these for easy json output
 	NumAboveStatementThreshold int
@@ -91,6 +92,11 @@ func (s *Summary) addParam(o *Offender) {
 	s.Param = append(s.Param, o)
 	s.NumAboveParamThreshold++
 	o.warning("too many params")
+}
+
+func (s *Summary) addBoolParam(o *Offender) {
+	s.BoolParams = append(s.BoolParams, o)
+	o.warning("bool function param")
 }
 
 func (s *Summary) addResult(o *Offender) {
@@ -156,6 +162,16 @@ func (p *Parser) checkParamCount(x *ast.FuncDecl) {
 	p.summary.addParam(p.offender(x.Name.String(), numFields, x.Pos()))
 }
 
+func (p *Parser) checkBoolParams(x *ast.FuncDecl) {
+	for _, f := range x.Type.Params.List {
+		// this is ugly, but:
+		if fmt.Sprintf("%s", f.Type) != "bool" {
+			continue
+		}
+		p.summary.addBoolParam(p.offender(x.Name.String(), 0, x.Pos()))
+	}
+}
+
 func (p *Parser) checkResultCount(x *ast.FuncDecl) {
 	numResults := x.Type.Results.NumFields()
 	if numResults <= *resultThreshold {
@@ -206,6 +222,7 @@ func (p *Parser) checkIfChains(x *ast.FuncDecl) {
 func (p *Parser) examineFunc(x *ast.FuncDecl) {
 	p.checkFuncLength(x)
 	p.checkParamCount(x)
+	p.checkBoolParams(x)
 	p.checkResultCount(x)
 	p.checkEmptyIfs(x)
 	p.checkIfChains(x)
