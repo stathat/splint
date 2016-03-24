@@ -24,6 +24,7 @@ var statementThreshold = flag.Int("s", 30, "function statement count threshold")
 var paramThreshold = flag.Int("p", 5, "parameter list length threshold")
 var resultThreshold = flag.Int("r", 5, "result list length threshold")
 var ifChainThreshold = flag.Int("c", 2, "if/else chain length threshold")
+var ifBodyThreshold = flag.Int("f", 20, "if body statement count threshold")
 var skipBoolParamCheck = flag.Bool("b", false, "don't warn on bool function params")
 var outputJSON = flag.Bool("j", false, "output results as json")
 var ignoreTestFiles = flag.Bool("i", true, "ignore test files")
@@ -70,6 +71,7 @@ type Summary struct {
 	EmptyIfs   []*Offender
 	IfChains   []*Offender
 	BoolParams []*Offender
+	LongIfs    []*Offender
 
 	// redundant, but using these for easy json output
 	NumAboveStatementThreshold int
@@ -77,10 +79,16 @@ type Summary struct {
 	NumAboveResultThreshold    int
 	NumIfChains                int
 	NumEmptyIfs                int
+	NumWithBoolParams          int
+	NumLongIfs                 int
 }
 
 func (s *Summary) IsClean() bool {
-	return len(s.Statement) == 0 && len(s.Param) == 0 && len(s.Result) == 0 && len(s.EmptyIfs) == 0 && len(s.IfChains) == 0
+	base := len(s.Statement) == 0 && len(s.Param) == 0 && len(s.Result) == 0 && len(s.EmptyIfs) == 0 && len(s.IfChains) == 0 && len(s.LongIfs) == 0
+	if *skipBoolParamCheck {
+		return base
+	}
+	return base && len(s.BoolParams) == 0
 }
 
 func (s *Summary) addStatement(o *Offender) {
@@ -97,7 +105,8 @@ func (s *Summary) addParam(o *Offender) {
 
 func (s *Summary) addBoolParam(o *Offender) {
 	s.BoolParams = append(s.BoolParams, o)
-	o.warning("bool function param")
+	s.NumWithBoolParams++
+	o.warnNoCount("bool function param")
 }
 
 func (s *Summary) addResult(o *Offender) {
@@ -110,6 +119,12 @@ func (s *Summary) addEmptyIfBody(o *Offender) {
 	s.EmptyIfs = append(s.EmptyIfs, o)
 	s.NumEmptyIfs++
 	o.warnNoCount("if with empty body")
+}
+
+func (s *Summary) addLongIfBody(o *Offender) {
+	s.LongIfs = append(s.LongIfs, o)
+	s.NumLongIfs++
+	o.warnNoCount("if with long body")
 }
 
 func (s *Summary) addIfChain(o *Offender) {
@@ -191,6 +206,8 @@ func (p *Parser) checkEmptyIfs(x *ast.FuncDecl) {
 		case *ast.IfStmt:
 			if y.Body == nil || len(y.Body.List) == 0 {
 				p.summary.addEmptyIfBody(p.offender(x.Name.String(), 0, y.Pos()))
+			} else if statementCount(y.Body) > *ifBodyThreshold {
+				p.summary.addLongIfBody(p.offender(x.Name.String(), 0, y.Pos()))
 			}
 		}
 		return true
@@ -300,6 +317,10 @@ func main() {
 		fmt.Println("Number of functions above result threshold:", summary.NumAboveResultThreshold)
 		fmt.Println("Number of long if/else chains:", summary.NumIfChains)
 		fmt.Println("Number of empty if bodies:", summary.NumEmptyIfs)
+		fmt.Println("Number of long if bodies:", summary.NumLongIfs)
+		if !*skipBoolParamCheck {
+			fmt.Println("Number of functions with bool params:", summary.NumWithBoolParams)
+		}
 		if !summary.IsClean() {
 			os.Exit(1)
 		}
